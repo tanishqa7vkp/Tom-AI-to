@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from pathlib import Path
 from typing import Literal
 import sqlite3
-from profit_gps import FarmConditions, calculate_profit_gps
+from profit_gps import FarmConditions, calculate_profit_gps, get_live_weather
 
 app = FastAPI(
     title="AGRIQ API",
@@ -146,4 +146,53 @@ def update_farmer(farmer_id: int, profile: FarmerProfile):
 @app.post("/api/profit-gps")
 def profit_gps(conditions: FarmConditions):
     return calculate_profit_gps(conditions)
+    
+@app.get("/api/weather")
+def live_weather(latitude: float, longitude: float):
+    try:
+        return get_live_weather(latitude, longitude)
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="Weather service temporarily unavailable"
+        )
+
+
+
+@app.get("/api/profit-gps/automatic")
+def automatic_profit_gps(
+    crop: str,
+    latitude: float,
+    longitude: float,
+    area_acres: float
+):
+    if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+        raise HTTPException(
+            status_code=422,
+            detail="Invalid latitude or longitude"
+        )
+
+    try:
+        weather = get_live_weather(latitude, longitude)
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to retrieve weather data"
+        )
+
+    conditions = FarmConditions(
+        crop=crop,
+        temperature_c=weather["temperature_c"],
+        humidity_percent=weather["humidity_percent"],
+        rainfall_mm=weather["rainfall_mm"],
+        area_acres=area_acres
+    )
+
+    result = calculate_profit_gps(conditions)
+
+    return {
+        "weather": weather,
+        "profit_gps": result
+    }
+
 
