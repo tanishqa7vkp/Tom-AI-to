@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from pathlib import Path
 from typing import Literal
 import sqlite3
+from profit_gps import FarmConditions, calculate_profit_gps
 
 app = FastAPI(
     title="AGRIQ API",
@@ -142,3 +143,7 @@ def update_farmer(farmer_id: int, profile: FarmerProfile):
         )
 
     return {"message": "Farmer profile updated successfully"}
+@app.post("/api/profit-gps")
+def profit_gps(conditions: FarmConditions):
+    return calculate_profit_gps(conditions)
+
