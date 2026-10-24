@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Literal
 import sqlite3
 from profit_gps import FarmConditions, calculate_profit_gps, get_live_weather
+from bargaining_shield import BargainingRequest, compare_buyer_offers
 
 app = FastAPI(
     title="AGRIQ API",
@@ -194,5 +195,11 @@ def automatic_profit_gps(
         "weather": weather,
         "profit_gps": result
     }
+
+    
+@app.post("/api/bargaining-shield")
+def bargaining_shield(request: BargainingRequest):
+    return compare_buyer_offers(request)
+
 
 

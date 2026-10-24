@@ -83,7 +83,8 @@ def calculate_profit_gps(data: FarmConditions):
         reverse=True
     )
 
-    )
+    
+
 
     return {
         "crop": data.crop,
